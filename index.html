@@ -7,55 +7,45 @@
 </head>
 <body>
     <h1>Fetch Worker Details</h1>
-    <form id="fetchForm">
-        <label for="workerId">Enter Worker ID:</label><br>
-        <input type="text" id="workerId" name="workerId" required><br><br>
-        <button type="submit">Fetch Details</button>
-    </form>
-
+    <label for="worker-id">Enter Worker ID:</label>
+    <input type="text" id="worker-id" placeholder="Worker ID">
+    <button id="fetch-button">Fetch Details</button>
     <h2>Worker Details:</h2>
-    <pre id="workerDetails"></pre>
+    <div id="response"></div>
 
     <script>
-        document.getElementById('fetchForm').addEventListener('submit', async function (event) {
-            event.preventDefault(); // Prevent form submission
-            
-            // API Gateway GET endpoint
-            const apiUrl = "https://6tdmvaam75.execute-api.us-east-2.amazonaws.com/RMS-DEP/Submit-Form"; // Replace with your actual API Gateway URL
-            
-            // Get the worker ID entered by the user
-            const workerId = document.getElementById('workerId').value;
+        const apiEndpoint = "https://your-api-gateway-endpoint/Submit-Form";
 
-            if (!workerId) {
-                document.getElementById('workerDetails').innerText = "Please enter a Worker ID.";
-                return;
-            }
+        document.getElementById("fetch-button").addEventListener("click", async () => {
+            const workerId = document.getElementById("worker-id").value;
+            const responseElement = document.getElementById("response");
 
             try {
-                // Make the GET request with worker_id as a query parameter
-                const response = await fetch(`${apiUrl}?worker_id=${workerId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                const response = await fetch(`${apiEndpoint}?worker_id=${workerId}`, {
+                    method: "GET",
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch details: ${response.statusText}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const result = await response.json();
-
-                // Display the worker details
-                if (Object.keys(result).length === 0) {
-                    document.getElementById('workerDetails').innerText = "No worker found with this ID.";
-                } else {
-                    document.getElementById('workerDetails').innerText = JSON.stringify(result, null, 2);
+                const data = await response.json();
+                if (data.worker_data) {
+                    responseElement.innerHTML = `
+                        <p><strong>First Name:</strong> ${data.worker_data.First_Name}</p>
+                        <p><strong>Last Name:</strong> ${data.worker_data.Last_Name}</p>
+                        <p><strong>Email:</strong> ${data.worker_data.Email_Address}</p>
+                        <p><strong>Address:</strong> ${data.worker_data.Address}</p>
+                        <p><strong>Mobile Number:</strong> ${data.worker_data.Mobile_Number}</p>
+                    `;
+                } else if (data.error) {
+                    responseElement.textContent = `Error: ${data.error}`;
                 }
             } catch (error) {
-                document.getElementById('workerDetails').innerText = `Error: ${error.message}`;
+                responseElement.textContent = `Error: ${error.message}`;
             }
         });
     </script>
 </body>
 </html>
+
